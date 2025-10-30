@@ -1,0 +1,12 @@
+torch 
+tab-transformer-pytorch
+numpy
+ipykernel 
+jupyter
+pandas 
+matplotlib 
+seaborn
+PyYAML
+scikit-learn
+torchmetrics
+tqdm

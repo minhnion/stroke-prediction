@@ -1,0 +1,31 @@
+raw_path: "data/raw/healthcare-dataset-stroke-data.csv"
+processed_path: "data/processed/healthcare_stroke"
+
+target_col: "stroke"
+
+drop_columns:
+  - "id"
+
+categorical_features:
+  - "gender"
+  - "ever_married"
+  - "work_type"
+  - "Residence_type"
+  - "smoking_status"
+  - "hypertension"
+  - "heart_disease"
+
+
+numerical_features:
+  - "age"
+  - "avg_glucose_level"
+  - "bmi"
+
+missing_values:
+  bmi:
+    strategy: "median"
+
+split_params:
+  test_size: 0.2
+  val_size: 0.1
+  random_state: 42
