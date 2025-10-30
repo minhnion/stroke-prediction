@@ -1,6 +1,7 @@
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
+from imblearn.over_sampling import SMOTE 
 import yaml
 import os 
 import joblib
@@ -54,6 +55,10 @@ def preprocess_data(config: dict):
         stratify=y_train_val
     )
 
+    if config.get('apply_smote', False):
+        smote = SMOTE(random_state=config['split_params']['random_state'])
+        X_train, y_train = smote.fit_resample(X_train, y_train)
+        
     scaler = StandardScaler()
     X_train[numerical_cols] = scaler.fit_transform(X_train[numerical_cols])
     X_val[numerical_cols] = scaler.transform(X_val[numerical_cols])

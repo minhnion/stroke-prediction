@@ -6,8 +6,8 @@ model:
   name: "TabTransformerModel" 
   params:
     dim: 32
-    depth: 4
-    heads: 4
+    depth: 6
+    heads: 8
     mlp_hidden_mults: [4, 2]
     attn_dropout: 0.1
     ff_dropout: 0.1
@@ -15,7 +15,7 @@ model:
 
 training:
   device: "cuda" # hoặc "cpu" nếu không có GPU
-  epochs: 30
+  epochs: 100
   batch_size: 128
 
 optimizer:
@@ -23,6 +23,9 @@ optimizer:
   params:
     lr: 0.0001
     weight_decay: 0.01 
+
+early_stopping:
+  patience: 15
 
 results:
   checkpoint_dir: "results/checkpoints/" 

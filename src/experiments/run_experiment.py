@@ -10,6 +10,7 @@ from src.data.dataset import StrokeDataset
 from src.models.tabtransformer import TabTransformerModel # Giả sử tên file là transformer.py
 from src.metrics import get_binary_classification_metrics
 from src.trainers.trainer import Trainer
+from src.trainers.callbacks import EarlyStopping
 
 def run_experiment(exp_config_path: str):
     with open(exp_config_path, 'r') as f:
@@ -51,17 +52,29 @@ def run_experiment(exp_config_path: str):
 
     optimizer = torch.optim.AdamW(model.parameters(), **exp_config['optimizer']['params'])
     
-    y_train_df = pd.read_csv(os.path.join(processed_dir, 'y_train.csv'))
-    neg_count = (y_train_df['stroke'] == 0).sum()
-    pos_count = (y_train_df['stroke'] == 1).sum()
-    pos_weight = torch.tensor([neg_count / pos_count], device=device)
-    
-    criterion = torch.nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+    if data_config.get('apply_smote', False):
+        criterion = torch.nn.BCEWithLogitsLoss()
+    else:
+        y_train_df = pd.read_csv(os.path.join(processed_dir, 'y_train.csv'))
+        neg_count = (y_train_df['stroke'] == 0).sum()
+        pos_count = (y_train_df['stroke'] == 1).sum()
+        pos_weight_ratio = neg_count / pos_count
+        pos_weight = torch.tensor([torch.sqrt(torch.tensor(pos_weight_ratio))], device=device)
+        
+        criterion = torch.nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
     metrics = get_binary_classification_metrics()
     
     checkpoint_dir = os.path.join(exp_config['results']['checkpoint_dir'], exp_config['experiment_name'])
 
+    os.makedirs(checkpoint_dir, exist_ok=True)
+
+    early_stopping_params = exp_config.get('early_stopping', {}) 
+    early_stopping = EarlyStopping(
+        patience=early_stopping_params.get('patience', 10), 
+        verbose=True,
+        path=os.path.join(checkpoint_dir, 'best_model.pth')
+    )
     trainer = Trainer(
         model=model,
         optimizer=optimizer,
@@ -71,7 +84,7 @@ def run_experiment(exp_config_path: str):
         val_loader=val_loader,
         metrics=metrics,
         epochs=exp_config['training']['epochs'],
-        checkpoint_dir=checkpoint_dir
+        early_stopping=early_stopping
     )
 
     print(f"--- Starting Experiment: {exp_config['experiment_name']} ---")
