@@ -10,3 +10,5 @@ PyYAML
 scikit-learn
 torchmetrics
 tqdm
+imbalanced-learn
+xgboost

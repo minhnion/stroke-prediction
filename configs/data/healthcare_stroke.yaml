@@ -12,15 +12,15 @@ categorical_features:
   - "work_type"
   - "Residence_type"
   - "smoking_status"
-  - "hypertension"
-  - "heart_disease"
 
 
 numerical_features:
   - "age"
   - "avg_glucose_level"
   - "bmi"
-
+  - "hypertension"
+  - "heart_disease"
+  
 missing_values:
   bmi:
     strategy: "median"
