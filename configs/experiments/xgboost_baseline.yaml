@@ -1,4 +1,5 @@
 experiment_name: "xgboost_baseline"
+experiment_type: ml 
 
 data_config_path: "configs/data/healthcare_stroke.yaml"
 

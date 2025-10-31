@@ -13,14 +13,13 @@ categorical_features:
   - "Residence_type"
   - "smoking_status"
 
-
 numerical_features:
   - "age"
   - "avg_glucose_level"
   - "bmi"
   - "hypertension"
   - "heart_disease"
-  
+
 missing_values:
   bmi:
     strategy: "median"

@@ -1,4 +1,5 @@
 experiment_name: "tabtransformer_baseline"
+experiment_type: dl
 
 data_config_path: "configs/data/healthcare_stroke.yaml"
 
