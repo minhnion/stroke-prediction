@@ -13,8 +13,7 @@ ENV/
 data/raw/
 data/processed/
 
-results/checkpoints/
-results/logs/
+results/
 *.pth
 *.pt
 *.ckpt
