@@ -12,3 +12,5 @@ torchmetrics
 tqdm
 imbalanced-learn
 xgboost
+lightgbm
+catboost

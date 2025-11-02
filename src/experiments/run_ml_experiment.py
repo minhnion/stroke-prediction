@@ -9,6 +9,10 @@ import joblib
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 
 from src.models.ml_algorithm.xgboost_model import XGBoostModel
+from src.models.ml_algorithm.rf_model import RandomForestModel
+from src.models.ml_algorithm.lightgbm_model import LightGBMModel 
+from src.models.ml_algorithm.catboost_model import CatBoostModel
+
 from src.utils import setup_logging, plot_confusion_matrix, plot_roc_curve
 
 def run_ml_experiment(exp_config_path: str):
@@ -37,11 +41,39 @@ def run_ml_experiment(exp_config_path: str):
     y_train = pd.read_csv(os.path.join(processed_dir, 'y_train.csv')).values.ravel()
     X_val = pd.read_csv(os.path.join(processed_dir, 'X_val.csv'))
     y_val = pd.read_csv(os.path.join(processed_dir, 'y_val.csv')).values.ravel()
+
+    logging.info(f"Initializing model: {config['model']['name']}")
+    model_name = config['model']['name']
+    model_params = config['model'].get('params', {})
+
+    if model_name == "XGBoostModel":
+        model = XGBoostModel(params=model_params)
+    elif model_name == "RandomForestModel": 
+        model = RandomForestModel(params=model_params)
+    elif model_name == "LightGBMModel": 
+        model = LightGBMModel(params=model_params)
+    elif model_name == "CatBoostModel": 
+        model = CatBoostModel(params=model_params)
+    else:
+        raise ValueError(f"Unknown ML model name: {model_name}")    
     
-    model = XGBoostModel(params=config['model']['params'])
-    
+
+    training_cfg = config.get('training', {})
+
+    early_stopping_rounds = training_cfg.get('early_stopping_rounds', None)
+
     logging.info("Training model...")
-    model.fit(X_train, y_train, X_val, y_val, early_stopping_rounds=config['training']['early_stopping_rounds'])
+
+    models_with_early_stopping = ["XGBoostModel", "LightGBMModel", "CatBoostModel"]
+
+    if model_name in models_with_early_stopping and early_stopping_rounds is not None:
+        model.fit(
+            X_train, y_train,
+            X_val, y_val,
+            early_stopping_rounds=early_stopping_rounds
+        )
+    else:
+        model.fit(X_train, y_train)
     
     logging.info("Saving the best model...")
     joblib.dump(model.model, checkpoint_path)
