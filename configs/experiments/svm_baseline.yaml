@@ -1,0 +1,16 @@
+experiment_name: "svm_baseline"
+experiment_type: ml
+
+data_config_path: "configs/data/healthcare_stroke.yaml"
+
+model:
+  name: "SVMModel"
+  params:
+    C: 10
+    kernel: 'rbf' 
+    gamma: 'auto'
+    probability: True
+    class_weight: 'balanced'
+    random_state: 42
+
+training: {}

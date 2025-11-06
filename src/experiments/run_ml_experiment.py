@@ -12,7 +12,7 @@ from src.models.ml_algorithm.xgboost_model import XGBoostModel
 from src.models.ml_algorithm.rf_model import RandomForestModel
 from src.models.ml_algorithm.lightgbm_model import LightGBMModel 
 from src.models.ml_algorithm.catboost_model import CatBoostModel
-
+from src.models.ml_algorithm.svm_model import SVMModel
 from src.utils import setup_logging, plot_confusion_matrix, plot_roc_curve
 
 def run_ml_experiment(exp_config_path: str):
@@ -42,10 +42,31 @@ def run_ml_experiment(exp_config_path: str):
     X_val = pd.read_csv(os.path.join(processed_dir, 'X_val.csv'))
     y_val = pd.read_csv(os.path.join(processed_dir, 'y_val.csv')).values.ravel()
 
-    logging.info(f"Initializing model: {config['model']['name']}")
     model_name = config['model']['name']
-    model_params = config['model'].get('params', {})
 
+    if model_name == "SVMModel":        
+        categorical_cols = data_config['categorical_features']
+        
+        # One-Hot Encoding instead if label encoding
+        X_train = pd.get_dummies(X_train, columns=categorical_cols, dummy_na=False)
+        X_val = pd.get_dummies(X_val, columns=categorical_cols, dummy_na=False)
+        
+        train_cols = X_train.columns
+        val_cols = X_val.columns
+        
+        missing_in_val = set(train_cols) - set(val_cols)
+        for c in missing_in_val:
+            X_val[c] = 0
+            
+        missing_in_train = set(val_cols) - set(train_cols)
+        for c in missing_in_train:
+            X_train[c] = 0
+            
+        X_val = X_val[train_cols]
+
+    logging.info(f"Initializing model: {model_name}")
+    model_params = config['model'].get('params', {}) 
+        
     if model_name == "XGBoostModel":
         model = XGBoostModel(params=model_params)
     elif model_name == "RandomForestModel": 
@@ -54,6 +75,8 @@ def run_ml_experiment(exp_config_path: str):
         model = LightGBMModel(params=model_params)
     elif model_name == "CatBoostModel": 
         model = CatBoostModel(params=model_params)
+    elif model_name == "SVMModel":
+        model = SVMModel(params=model_params)
     else:
         raise ValueError(f"Unknown ML model name: {model_name}")    
     
