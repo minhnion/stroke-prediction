@@ -1,0 +1,23 @@
+experiment_name: "catboost_tuning"
+experiment_type: tuning
+
+data_config_path: "configs/data/healthcare_stroke.yaml"
+
+model:
+  name: "CatBoostModel"
+  param_dist:
+    iterations: [500, 1000, 2000]
+    learning_rate: [0.01, 0.02, 0.05]   
+    depth: [4, 6, 8]
+
+    l2_leaf_reg: [1, 3, 5, 7]
+
+    subsample: [0.7, 0.8, 0.9]
+
+  
+
+tuning:
+  n_iter: 50
+  cv: 5
+  scoring: 'f1'
+  n_jobs: -1
