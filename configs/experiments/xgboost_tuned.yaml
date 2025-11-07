@@ -1,5 +1,5 @@
-experiment_name: "xgboost_baseline"
-experiment_type: ml 
+experiment_name: "xgboost_tuned"
+experiment_type: ml
 
 data_config_path: "configs/data/healthcare_stroke.yaml"
 
@@ -8,12 +8,12 @@ model:
   params:
     objective: 'binary:logistic'
     eval_metric: 'logloss'
-    n_estimators: 2000 
-    learning_rate: 0.02
-    max_depth: 3
-    subsample: 0.7
-    colsample_bytree: 0.7
+    subsample: 0.9
+    n_estimators: 500
+    max_depth: 4
+    learning_rate: 0.01
     gamma: 0.1
+    colsample_bytree: 1.0
 
 training:
   early_stopping_rounds: 50

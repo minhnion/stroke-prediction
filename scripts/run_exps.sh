@@ -27,9 +27,14 @@ if grep -q "experiment_type: ml" "$CONFIG_FILE"; then
 elif grep -q "experiment_type: dl" "$CONFIG_FILE"; then
     echo "Phát hiện loại thí nghiệm: Deep Learning (dl)"
     PYTHON_SCRIPT="src.experiments.run_experiment"
+
+elif grep -q "experiment_type: tuning" "$CONFIG_FILE"; then 
+    echo "Phát hiện loại thí nghiệm: Hyperparameter Tuning (tuning)"
+    PYTHON_SCRIPT="src.experiments.run_tuning"
+
 else
     echo "Lỗi: Không tìm thấy hoặc không nhận diện được trường 'experiment_type' trong file ${CONFIG_FILE}."
-    echo "Vui lòng thêm 'experiment_type: ml' hoặc 'experiment_type: dl' vào file config."
+    echo "Vui lòng thêm 'experiment_type: ml', 'dl', hoặc 'tuning' vào file config."
     exit 1
 fi
 

@@ -5,6 +5,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, roc_curve, auc
+import contextlib
+import joblib
+from tqdm import tqdm
 
 def setup_logging(log_path):
     log_dir = os.path.dirname(log_path)
@@ -95,3 +98,17 @@ def plot_training_history(history, save_path):
     plt.savefig(save_path, bbox_inches='tight')
     plt.close()
     logging.info(f"Training history plot saved to {save_path}")
+
+@contextlib.contextmanager
+def tqdm_joblib(tqdm_object):
+    class TqdmBatchCompletionCallback(joblib.parallel.BatchCompletionCallBack):
+        def __call__(self, *args, **kwargs):
+            tqdm_object.update(n=self.batch_size)
+            return super().__call__(*args, **kwargs)
+
+    old_callback = joblib.parallel.BatchCompletionCallBack
+    joblib.parallel.BatchCompletionCallBack = TqdmBatchCompletionCallback
+    try:
+        yield
+    finally:
+        joblib.parallel.BatchCompletionCallBack = old_callback

@@ -1,0 +1,23 @@
+experiment_name: "lightgbm_tuning"
+experiment_type: tuning
+
+data_config_path: "configs/data/healthcare_stroke.yaml"
+
+model:
+  name: "LightGBMModel"
+  param_dist:
+    n_estimators: [500, 1000, 2000]
+    learning_rate: [0.01, 0.02, 0.05]
+    
+    num_leaves: [20, 31, 40, 50]
+    
+    max_depth: [5, 7, 10, -1]
+    
+    subsample: [0.7, 0.8, 0.9, 1.0]
+    colsample_bytree: [0.7, 0.8, 0.9, 1.0]
+
+tuning:
+  n_iter: 50
+  cv: 5
+  scoring: 'f1'
+  n_jobs: -1
