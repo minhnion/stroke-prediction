@@ -1,0 +1,17 @@
+experiment_name: "svm_tuned"
+experiment_type: ml
+
+data_config_path: "configs/data/healthcare_stroke.yaml"
+
+model:
+  name: "SVMModel"
+  params:
+    random_state: 42
+
+    probability: True
+    kernel: "linear" 
+    gamma: 0.001
+    class_weight: "balanced"
+    C: 100
+
+training: {}

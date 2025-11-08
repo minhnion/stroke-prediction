@@ -1,0 +1,18 @@
+experiment_name: "rf_tuned"
+experiment_type: ml
+
+data_config_path: "configs/data/healthcare_stroke.yaml"
+
+model:
+  name: "RandomForestModel"
+  params:
+    class_weight: "balanced"
+    random_state: 42
+
+    n_estimators: 200
+    min_samples_split: 5
+    min_samples_leaf: 4
+    max_features: "sqrt"
+    max_depth: 10
+
+training: {}
