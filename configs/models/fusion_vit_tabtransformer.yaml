@@ -3,7 +3,7 @@ model_name: "FusionModel"
 image_encoder:
   name: "timm_vit"
   params:
-    model_name: "vit_base_patch16_224" 
+    model_name: "vit_tiny_patch16_224" 
     pretrained: true
     # pretrained_checkpoint_path: null 
 
@@ -17,7 +17,10 @@ tabular_encoder:
 fusion:
   type: "concat_transformer" 
   params:
+    projection_dim: 512
     fusion_depth: 2
+    nhead: 8
+    dropout: 0.1
     
 mlp_head:
   params:

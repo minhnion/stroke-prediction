@@ -13,8 +13,9 @@ loss_function:
     pos_weight_mode: "sqrt"
         
 training_params:
-  epochs: 200
-  device: "cuda"
+  epochs: 30
+  # device: "cuda"
+  device: "cpu"
       
 early_stopping:
   patience: 15

@@ -9,7 +9,7 @@ import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 
-from src.data.dataset import StrokeDataset
+from src.data.datasets import StrokeDataset
 from src.models.tabtransformer import TabTransformerModel
 from src.models.ml_algorithm.xgboost_model import XGBoostModel
 from src.models.ml_algorithm.rf_model import RandomForestModel
