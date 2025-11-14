@@ -1,0 +1,21 @@
+trainer_name: "DefaultTrainer"
+
+optimizer:
+  name: "AdamW"
+  params:
+    lr: 0.0001
+    weight_decay: 0.01
+
+loss_function:
+  name: "BCEWithLogitsLoss"
+  params:
+    use_pos_weight: true
+    pos_weight_mode: "sqrt"
+        
+training_params:
+  epochs: 200
+  device: "cuda"
+      
+early_stopping:
+  patience: 15
+  monitor_metric: "val_loss" 

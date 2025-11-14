@@ -1,0 +1,19 @@
+dataset_name: "multimodal_stroke"
+dataset_class: "MultiModalStrokeDataset" 
+
+csv_path: "data/raw/multi_data_stroke/synthetic_multimodal.csv"
+image_root_dir: "data/raw/multi_data_stroke/"
+
+image_path_col: "image_path"
+target_col: "stroke"
+categorical_features: ["gender", "hypertension", "heart_disease", "ever_married", "work_type", "Residence_type", "smoking_status"]
+numerical_features: ["age", "avg_glucose_level", "bmi"]
+
+use_smote: false 
+
+image_size: 224
+image_mean: [0.5, 0.5, 0.5] 
+image_std: [0.5, 0.5, 0.5]
+
+batch_size: 16 
+num_workers: 4

@@ -1,0 +1,26 @@
+model_name: "FusionModel" 
+
+image_encoder:
+  name: "timm_vit"
+  params:
+    model_name: "vit_base_patch16_224" 
+    pretrained: true
+    # pretrained_checkpoint_path: null 
+
+tabular_encoder:
+  name: "tab_transformer" 
+  params:
+    dim: 32
+    depth: 4
+    heads: 4
+    
+fusion:
+  type: "concat_transformer" 
+  params:
+    fusion_depth: 2
+    
+mlp_head:
+  params:
+    hidden_dims: [128, 64]
+    output_dim: 1
+    dropout: 0.2
