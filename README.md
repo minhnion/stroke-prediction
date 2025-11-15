@@ -1,5 +1,7 @@
 # 🚀 Hướng Dẫn Cài Đặt & Sử Dụng Dự Án
 
+## A. Uni-tabular data
+
 ## 1. Yêu Cầu Hệ Thống
 - Python **3.9+**
 - Git
@@ -60,3 +62,62 @@ ví dụ chạy baseline:
 chmod +x scripts/evaluate.sh
 ./scripts/evaluate.sh xgboost_tuned
 ```
+
+## B. Multimodal data ()
+Đây là quy trình để chạy các thí nghiệm multi-modal mới, kết hợp dữ liệu dạng bảng và dữ liệu hình ảnh.
+
+### 1. Tiền xử lý Dữ liệu
+
+Bước này chỉ cần chạy **một lần** cho mỗi bộ dữ liệu. Nó sẽ xử lý các giá trị thiếu, mã hóa các cột hạng mục, và chia dữ liệu thành các tập `train`, `validation`, và `test`.
+
+**Cú pháp:**
+
+```bash
+./scripts/preprocess_multimodal.sh <tên_config_data>
+```
+Ví dụ
+```bash
+./scripts/preprocess_preprocess_multimodal.sh multimodal_stroke_v1
+```
+Kết quả sẽ được lưu vào thư mục `data/processed/multimodal_stroke/`.
+
+### 2. Huấn luyện Mô hình
+
+Sau khi đã tiền xử lý, bạn có thể chạy các thí nghiệm huấn luyện. Script sẽ tự động tạo một thư mục kết quả duy nhất dựa trên tên của các file cấu hình.
+
+**Cú pháp:**
+```bash
+./scripts/run_multimodal_exp.sh \
+  --model configs/models/<tên_config_model>.yaml \
+  --data configs/data/<tên_config_data>.yaml \
+  --trainer configs/trainers/<tên_config_trainer>.yaml
+```
+
+Ví dụ (Chạy thí nghiệm Fusion Transformer):
+```bash
+./scripts/run_multimodal_exp.sh \
+  --model configs/models/fusion_vit_tabtransformer.yaml \
+  --data configs/data/multimodal_stroke_v1.yaml \
+  --trainer configs/trainers/adamw_bce_sqrt.yaml
+```
+
+Kết quả huấn luyện, bao gồm checkpoint của mô hình tốt nhất, sẽ được lưu tại results/experiments/<tên_thí_nghiệm>/.
+
+### 3. Đánh giá trên Tập Test
+
+```bash
+./scripts/evaluate_multimodal.sh \
+  --model configs/models/<tên_config_model>.yaml \
+  --data configs/data/<tên_config_data>.yaml \
+  --trainer configs/trainers/<tên_config_trainer>.yaml
+```
+
+Ví dụ (Đánh giá mô hình Fusion Transformer đã huấn luyện):
+
+```bash
+./scripts/evaluate_multimodal.sh \
+  --model configs/models/fusion_vit_tabtransformer.yaml \
+  --data configs/data/multimodal_stroke_v1.yaml \
+  --trainer configs/trainers/adamw_bce_sqrt.yaml
+```
+Kết quả đánh giá cuối cùng sẽ được lưu trong thư mục con test_evaluation bên trong thư mục thí nghiệm tương ứng.

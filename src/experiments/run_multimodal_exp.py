@@ -45,38 +45,19 @@ def run_experiment(model_config_path, data_config_path, trainer_config_path):
     logging.info(f"Data Config: {data_config_path}")
     logging.info(f"Trainer Config: {trainer_config_path}")
 
-    logging.info("Preparing data...")
-    full_df = pd.read_csv(data_config['csv_path'])
-
-    if 'missing_values' in data_config:
-        logging.info("Handling missing values...")
-        for col, params in data_config['missing_values'].items():
-            if params['strategy'] == 'mean':
-                fill_value = full_df[col].mean()
-            elif params['strategy'] == 'median':
-                fill_value = full_df[col].median()
-            elif params['strategy'] == 'mode':
-                fill_value = full_df[col].mode()[0]
-            else: 
-                fill_value = params.get('value', 0)
-            
-            full_df[col].fillna(fill_value, inplace=True)
-            logging.info(f"Filled missing values in '{col}' with strategy '{params['strategy']}' (value: {fill_value:.2f})")
-
-    label_encoders = {}
-    for col in data_config['categorical_features']:
-        encoder = LabelEncoder()
-        full_df[col] = encoder.fit_transform(full_df[col])
-        label_encoders[col] = encoder
-
-    train_val_df, test_df = train_test_split(full_df, test_size=0.2, random_state=42, stratify=full_df[data_config['target_col']])
-    train_df, val_df = train_test_split(train_val_df, test_size=0.1, random_state=42, stratify=train_val_df[data_config['target_col']])
-
+    logging.info("Loading preprocessed data...")
     processed_dir = os.path.join('data/processed', data_config['dataset_name'])
-    os.makedirs(processed_dir, exist_ok=True)
-    train_df.to_csv(os.path.join(processed_dir, 'train.csv'), index=False)
-    val_df.to_csv(os.path.join(processed_dir, 'val.csv'), index=False)
     
+    train_csv_path = os.path.join(processed_dir, 'train.csv')
+    val_csv_path = os.path.join(processed_dir, 'val.csv')
+    
+    if not os.path.exists(train_csv_path) or not os.path.exists(val_csv_path):
+        logging.error(f"Preprocessed data not found in {processed_dir}. Please run the preprocessing script first.")
+        return
+
+    train_df = pd.read_csv(train_csv_path)
+    val_df = pd.read_csv(val_csv_path)
+
     img_transforms = get_transforms(data_config['image_size'], data_config['image_mean'], data_config['image_std'])
 
     dataset_params = {
@@ -88,14 +69,15 @@ def run_experiment(model_config_path, data_config_path, trainer_config_path):
         'transforms': img_transforms
     }
 
-    train_dataset = MultiModalStrokeDataset(csv_path=os.path.join(processed_dir, 'train.csv'), **dataset_params)
-    val_dataset = MultiModalStrokeDataset(csv_path=os.path.join(processed_dir, 'val.csv'), **dataset_params)
+    train_dataset = MultiModalStrokeDataset(csv_path=train_csv_path, **dataset_params)
+    val_dataset = MultiModalStrokeDataset(csv_path=val_csv_path, **dataset_params)
 
     train_loader = DataLoader(train_dataset, batch_size=data_config['batch_size'], shuffle=True, num_workers=data_config['num_workers'])
     val_loader = DataLoader(val_dataset, batch_size=data_config['batch_size'], shuffle=False, num_workers=data_config['num_workers'])
 
     logging.info("Building model...")
-    cat_dims = [len(full_df[col].unique()) for col in data_config['categorical_features']]
+    combined_df = pd.concat([train_df, val_df])
+    cat_dims = [len(combined_df[col].unique()) for col in data_config['categorical_features']]
     model_config['tabular_encoder']['params']['categories'] = tuple(cat_dims)
     
     image_encoder, img_dim = create_image_encoder(**model_config['image_encoder'])
