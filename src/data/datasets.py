@@ -1,5 +1,6 @@
 import torch
 from torch.utils.data import Dataset
+from torchvision.datasets import ImageFolder 
 import pandas as pd
 import numpy as np
 import os
@@ -76,3 +77,23 @@ def get_transforms(image_size, mean, std):
         A.Normalize(mean=mean, std=std),
         ToTensorV2(),
     ])
+
+class ImageFolderWrapper(ImageFolder):
+
+    def __init__(self, root, transform=None):
+        super().__init__(root, transform=None) 
+        self.albumentations_transform = transform
+
+    def __getitem__(self, index):
+        path, label = self.samples[index]
+        
+        image = np.array(Image.open(path).convert("RGB"))
+        
+        if self.albumentations_transform:
+            transformed = self.albumentations_transform(image=image)
+            image = transformed['image']
+            
+        return {
+            'image': image,
+            'label': torch.tensor(label, dtype=torch.float).unsqueeze(0)
+        }

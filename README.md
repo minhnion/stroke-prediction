@@ -121,3 +121,61 @@ Ví dụ (Đánh giá mô hình Fusion Transformer đã huấn luyện):
   --trainer configs/trainers/adamw_bce_sqrt.yaml
 ```
 Kết quả đánh giá cuối cùng sẽ được lưu trong thư mục con test_evaluation bên trong thư mục thí nghiệm tương ứng.
+
+## C. Uni-Image data ()
+Đây là quy trình để chạy các thí nghiệm với dữ liệu chỉ Image
+
+### 1. Tiền xử lý Dữ liệu
+
+
+**Cú pháp:**
+
+```bash
+./scripts/preprocess_image.sh <tên_config_data>
+```
+Ví dụ
+```bash
+./scripts/preprocess_image.sh image_only_stroke
+```
+Kết quả sẽ được lưu vào thư mục `data/processed/image_only_stroke/`.
+
+### 2. Huấn luyện Mô hình
+
+Sau khi đã tiền xử lý, bạn có thể chạy các thí nghiệm huấn luyện. Script sẽ tự động tạo một thư mục kết quả duy nhất dựa trên tên của các file cấu hình.
+
+**Cú pháp:**
+```bash
+./scripts/run_image_exp.sh \
+  --model configs/models/<tên_config_model>.yaml \
+  --data configs/data/<tên_config_data>.yaml \
+  --trainer configs/trainers/<tên_config_trainer>.yaml
+```
+
+Ví dụ (Chạy thí nghiệm ViT):
+```bash
+./scripts/run_image_exp.sh \
+  --model configs/models/vit_classifier.yaml \
+  --data configs/data/image_only_stroke.yaml \
+  --trainer configs/trainers/adamw_bce_sqrt.yaml
+```
+
+Kết quả huấn luyện, bao gồm checkpoint của mô hình tốt nhất, sẽ được lưu tại results/experiments/<tên_thí_nghiệm>/.
+
+### 3. Đánh giá trên Tập Test
+
+```bash
+./scripts/evaluate_image.sh \
+  --model configs/models/<tên_config_model>.yaml \
+  --data configs/data/<tên_config_data>.yaml \
+  --trainer configs/trainers/<tên_config_trainer>.yaml
+```
+
+Ví dụ (Đánh giá mô hình Fusion Transformer đã huấn luyện):
+
+```bash
+./scripts/evaluate_image.sh \
+  --model configs/models/vit_classifier.yaml \
+  --data configs/data/image_only_stroke.yaml \
+  --trainer configs/trainers/adamw_bce_sqrt.yaml
+```
+Kết quả đánh giá cuối cùng sẽ được lưu trong thư mục con test_evaluation bên trong thư mục thí nghiệm tương ứng.

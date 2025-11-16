@@ -1,0 +1,14 @@
+model_name: "ImageClassifier" 
+
+image_encoder:
+  name: "timm_vit"
+  params:
+    # model_name: "vit_base_patch16_224"
+    model_name: "vit_tiny_patch16_224" 
+
+    pretrained: true
+    
+mlp_head:
+  params:
+    output_dim: 1
+    dropout: 0.2
