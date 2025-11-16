@@ -1,0 +1,20 @@
+experiment_name: "xgboost_tuned_tabular_data"
+experiment_type: ml
+
+data_config_path: "configs/data/tabular_stroke.yaml"
+
+model:
+  name: "XGBoostModel"
+  params:
+    objective: 'binary:logistic'
+    eval_metric: 'logloss'
+    use_label_encoder: false
+    subsample: 0.9
+    n_estimators: 500
+    max_depth: 4
+    learning_rate: 0.01
+    gamma: 0.1
+    colsample_bytree: 1.0
+
+training:
+  early_stopping_rounds: 50

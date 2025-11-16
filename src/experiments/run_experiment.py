@@ -9,7 +9,7 @@ import json
 import logging
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 
-from src.data.dataset import StrokeDataset
+from src.data.datasets import StrokeDataset
 from src.models.tabtransformer import TabTransformerModel
 from src.metrics import get_binary_classification_metrics
 from src.trainers.trainer import Trainer

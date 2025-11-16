@@ -1,0 +1,17 @@
+experiment_name: "svm_tuned_tabular_data"
+experiment_type: ml
+
+data_config_path: "configs/data/tabular_stroke.yaml"
+
+model:
+  name: "SVMModel"
+  params:
+    random_state: 42
+
+    probability: True
+    kernel: "linear" 
+    gamma: 0.001
+    class_weight: "balanced"
+    C: 100
+
+training: {}

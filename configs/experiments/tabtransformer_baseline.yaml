@@ -1,7 +1,8 @@
 experiment_name: "tabtransformer_baseline"
 experiment_type: dl
 
-data_config_path: "configs/data/healthcare_stroke.yaml"
+# data_config_path: "configs/data/healthcare_stroke.yaml"
+data_config_path: "configs/data/tabular_stroke.yaml"
 
 model:
   name: "TabTransformerModel" 
@@ -15,14 +16,15 @@ model:
     dim_out: 1
 
 training:
-  device: "cuda" # hoặc "cpu" nếu không có GPU
+  # device: "cuda" # hoặc "cpu" nếu không có GPU
+  device: "cpu"
   epochs: 100
   batch_size: 128
 
 optimizer:
   name: "AdamW"
   params:
-    lr: 0.0001
+    lr: 0.001
     weight_decay: 0.01 
 
 early_stopping:
