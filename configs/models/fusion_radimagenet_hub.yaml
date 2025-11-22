@@ -1,0 +1,27 @@
+model_name: "FusionModel"
+
+image_encoder:
+  name: "radimagenet_hub" 
+  params:
+    # Tên model trong repo Warvito. Có thể là:
+    # radimagenet_resnet50, radimagenet_resnet18, radimagenet_dense121, radimagenet_inception_v3
+    model_name: "radimagenet_resnet50"
+
+tabular_encoder:
+  name: "tab_transformer"
+  params:
+    dim: 32
+    depth: 4
+    heads: 4
+    
+fusion:
+  type: "concat_transformer"
+  params:
+    projection_dim: 512
+    fusion_depth: 2
+    
+mlp_head:
+  params:
+    hidden_dims: [128, 64]
+    output_dim: 1
+    dropout: 0.2

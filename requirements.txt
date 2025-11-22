@@ -16,3 +16,6 @@ lightgbm
 catboost
 timm 
 albumentations
+gdown
+transformers
+open_clip_torch

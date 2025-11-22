@@ -86,7 +86,8 @@ class FusionModel(nn.Module):
         x_cont = batch['x_cont']
         
         # 1. Mã hóa
-        image_features = self.image_encoder.forward_features(image)[:, 0]
+        image_features = self.image_encoder(image)
+            
         tabular_features = self.tabular_encoder(x_categ, x_cont)
         
         # 2. Chiếu (Project) các features về cùng một không gian

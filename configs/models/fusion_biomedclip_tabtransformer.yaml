@@ -1,0 +1,25 @@
+model_name: "FusionModel"
+
+image_encoder:
+  name: "biomedclip_hf"
+  params:
+    model_name: "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
+    
+tabular_encoder:
+  name: "tab_transformer"
+  params:
+    dim: 32
+    depth: 4
+    heads: 4
+    
+fusion:
+  type: "concat_transformer"
+  params:
+    projection_dim: 512
+    fusion_depth: 2
+    
+mlp_head:
+  params:
+    hidden_dims: [128, 64]
+    output_dim: 1
+    dropout: 0.2

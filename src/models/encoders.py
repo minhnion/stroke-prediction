@@ -1,7 +1,9 @@
 import torch
 import torch.nn as nn
 import timm
+import logging
 from src.models.tabtransformer_encoder import TabTransformerEncoder
+from src.models.biomed_clip_image_encoder import BiomedCLIPImageEncoder
 
 def create_image_encoder(name, params):
     if name == "timm_vit":
@@ -22,6 +24,40 @@ def create_image_encoder(name, params):
     
     # elif name == "timm_convnext":
     #     ...
+    
+    elif name == "radimagenet_hub":
+        repo = 'Warvito/radimagenet-models'
+        model_name = params.get('model_name', 'radimagenet_resnet50')
+        logging.info(f"Downloading/Loading {model_name} from torch.hub ({repo})...")
+        model = torch.hub.load(repo, model_name, verbose=True, trust_repo=True)
+
+        if "resnet50" in model_name:
+            embedding_dim = 2048
+        elif "resnet18" in model_name:
+            embedding_dim = 512
+        elif "dense" in model_name:
+            embedding_dim = 1024
+        elif "inception" in model_name:
+            embedding_dim = 2048
+        else:
+            embedding_dim = 2048  # default fallback
+
+        model = nn.Sequential(
+            model,                        # Backbone
+            nn.AdaptiveAvgPool2d((1, 1)), # Current: [Batch, 2048, 7, 7].  -> [Batch, 2048, 1, 1]
+            nn.Flatten()                  # Flatten vector -> [Batch, 2048]
+        )
+        
+        logging.info(f"RadImageNet model loaded as Backbone + Pooling. Output dim: {embedding_dim}")        
+
+        return model, embedding_dim
+    
+    elif name == "biomedclip_hf":
+        hf_model_name = params.get('model_name', "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224")
+        model = BiomedCLIPImageEncoder(model_name=hf_model_name)
+        embedding_dim = model.embed_dim
+        logging.info(f"Successfully loaded BiomedCLIP. Embedding dim: {embedding_dim}")
+        return model, embedding_dim
     
     else:
         raise ValueError(f"Unknown image encoder name: {name}")
