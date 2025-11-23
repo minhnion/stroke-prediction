@@ -4,8 +4,13 @@ import timm
 import logging
 from src.models.tabtransformer_encoder import TabTransformerEncoder
 from src.models.biomed_clip_image_encoder import BiomedCLIPImageEncoder
+from src.trainers.fine_tuning import apply_finetuning_strategy
 
 def create_image_encoder(name, params):
+    
+    model = None
+    embedding_dim = 0
+
     if name == "timm_vit":
         model = timm.create_model(
             params['model_name'],
@@ -20,7 +25,6 @@ def create_image_encoder(name, params):
             print(f"Loading custom image checkpoint from: {params['pretrained_checkpoint_path']}")
             model.load_state_dict(torch.load(params['pretrained_checkpoint_path']))
             
-        return model, embedding_dim
     
     # elif name == "timm_convnext":
     #     ...
@@ -49,18 +53,20 @@ def create_image_encoder(name, params):
         )
         
         logging.info(f"RadImageNet model loaded as Backbone + Pooling. Output dim: {embedding_dim}")        
-
-        return model, embedding_dim
     
     elif name == "biomedclip_hf":
         hf_model_name = params.get('model_name', "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224")
         model = BiomedCLIPImageEncoder(model_name=hf_model_name)
         embedding_dim = model.embed_dim
         logging.info(f"Successfully loaded BiomedCLIP. Embedding dim: {embedding_dim}")
-        return model, embedding_dim
     
     else:
         raise ValueError(f"Unknown image encoder name: {name}")
+    
+    if 'fine_tuning' in params:
+        model = apply_finetuning_strategy(model, params['fine_tuning'])
+    
+    return model, embedding_dim
 
 
 def create_tabular_encoder(name, params, data_config):

@@ -19,3 +19,4 @@ albumentations
 gdown
 transformers
 open_clip_torch
+peft
