@@ -34,3 +34,5 @@ Thumbs.db
 *.bak
 *.tmp
 *.swp
+
+model_weights/

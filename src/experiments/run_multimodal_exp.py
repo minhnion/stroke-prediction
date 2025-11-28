@@ -18,7 +18,7 @@ from src.models.multimodal.fusion_model import FusionModel
 from src.trainers.multimodal_trainer import MultiModalTrainer
 from src.trainers.callbacks import EarlyStopping
 from src.metrics import get_binary_classification_metrics
-from src.utils import setup_logging, plot_confusion_matrix, plot_roc_curve, plot_training_history
+from src.utils import setup_logging, plot_confusion_matrix, plot_roc_curve, plot_training_history, set_seed
 
 def run_experiment(model_config_path, data_config_path, trainer_config_path):
     with open(model_config_path, 'r') as f: model_config = yaml.safe_load(f)
@@ -41,6 +41,10 @@ def run_experiment(model_config_path, data_config_path, trainer_config_path):
     log_path = os.path.join('results/logs', f"{exp_name}.log")
     setup_logging(log_path)
     logging.info(f"--- Starting Experiment: {exp_name} ---")
+    
+    seed = trainer_config.get('seed', 42)
+    set_seed(seed)
+
     logging.info(f"Model Config: {model_config_path}")
     logging.info(f"Data Config: {data_config_path}")
     logging.info(f"Trainer Config: {trainer_config_path}")

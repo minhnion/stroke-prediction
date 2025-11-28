@@ -5,6 +5,7 @@ import logging
 from src.models.tabtransformer_encoder import TabTransformerEncoder
 from src.models.biomed_clip_image_encoder import BiomedCLIPImageEncoder
 from src.trainers.fine_tuning import apply_finetuning_strategy
+from src.utils import load_weights
 
 def create_image_encoder(name, params):
     
@@ -24,11 +25,22 @@ def create_image_encoder(name, params):
         if params.get('pretrained_checkpoint_path'):
             print(f"Loading custom image checkpoint from: {params['pretrained_checkpoint_path']}")
             model.load_state_dict(torch.load(params['pretrained_checkpoint_path']))
-            
-    
-    # elif name == "timm_convnext":
-    #     ...
-    
+
+    elif name == "timm_cnn":
+        model_name = params['model_name']
+        logging.info(f"Creating CNN model: {model_name}")
+        
+        # Tạo kiến trúc rỗng
+        model = timm.create_model(model_name, pretrained=False, num_classes=0)
+        embedding_dim = model.num_features
+        
+        # Load weights
+        checkpoint_path = params.get('pretrained_checkpoint_path')
+        if checkpoint_path:
+            model = load_weights(model, checkpoint_path, model_name)
+        else:
+            logging.warning("Running with RANDOM INITIALIZATION (No checkpoint provided)")
+
     elif name == "radimagenet_hub":
         repo = 'Warvito/radimagenet-models'
         model_name = params.get('model_name', 'radimagenet_resnet50')

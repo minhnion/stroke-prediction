@@ -17,8 +17,7 @@ class ImageClassifier(nn.Module):
     def forward(self, batch):
         image = batch['image']
         
-        # [CLS] token của ViT
-        features = self.image_encoder.forward_features(image)[:, 0]
+        features = self.image_encoder(image) 
         
         output = self.head(features)
         

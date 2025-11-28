@@ -1,0 +1,17 @@
+model_name: "ImageClassifier" # Quan trọng: Dùng class ImageClassifier
+
+image_encoder:
+  name: "timm_cnn" # Dùng logic load thủ công
+  params:
+    model_name: "resnet50"
+    pretrained_checkpoint_path: "model_weights/ResNet50.pt"
+    
+    fine_tuning:
+      method: "freeze"  
+      params:
+        unfreeze_last_blocks: 0 
+mlp_head:
+  params:  
+    output_dim: 1
+    dropout: 0.5
+    hidden_dims: [512, 256]

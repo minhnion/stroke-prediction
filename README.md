@@ -87,7 +87,7 @@ Sau khi đã tiền xử lý, bạn có thể chạy các thí nghiệm huấn l
 
 **Cú pháp:**
 ```bash
-./scripts/run_multimodal_exp.sh \
+./scripts/run_multi_modal_exp.sh \
   --model configs/models/<tên_config_model>.yaml \
   --data configs/data/<tên_config_data>.yaml \
   --trainer configs/trainers/<tên_config_trainer>.yaml
@@ -95,7 +95,7 @@ Sau khi đã tiền xử lý, bạn có thể chạy các thí nghiệm huấn l
 
 Ví dụ (Chạy thí nghiệm Fusion Transformer):
 ```bash
-./scripts/run_multimodal_exp.sh \
+./scripts/run_multi_modal_exp.sh \
   --model configs/models/fusion_vit_tabtransformer.yaml \
   --data configs/data/multimodal_stroke_v1.yaml \
   --trainer configs/trainers/adamw_bce_sqrt.yaml

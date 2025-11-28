@@ -9,6 +9,10 @@ import contextlib
 import joblib
 from tqdm import tqdm
 
+import random
+import numpy as np
+import torch
+
 def setup_logging(log_path):
     log_dir = os.path.dirname(log_path)
     os.makedirs(log_dir, exist_ok=True)
@@ -24,6 +28,16 @@ def setup_logging(log_path):
             logging.StreamHandler()
         ]
     )
+
+def set_seed(seed=42):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 def plot_confusion_matrix(y_true, y_pred, class_names, save_path):
     cm = confusion_matrix(y_true, y_pred)
@@ -112,3 +126,63 @@ def tqdm_joblib(tqdm_object):
         yield
     finally:
         joblib.parallel.BatchCompletionCallBack = old_callback
+
+
+def load_weights(model, checkpoint_path, model_type):
+    logging.info(f"Smart loading weights for {model_type} from: {checkpoint_path}")
+    if not checkpoint_path or checkpoint_path == "None":
+        logging.warning("No checkpoint path provided. Skipping load.")
+        return model
+
+    try:
+        checkpoint = torch.load(checkpoint_path, map_location='cpu')
+    except Exception as e:
+        logging.error(f"Failed to load checkpoint file: {e}")
+        raise e
+    
+    # 1. Unwrap dictionary
+    if isinstance(checkpoint, dict):
+        if 'state_dict' in checkpoint: state_dict = checkpoint['state_dict']
+        elif 'model' in checkpoint: state_dict = checkpoint['model']
+        else: state_dict = checkpoint
+    else:
+        state_dict = checkpoint
+
+    # 2. Chuẩn bị quy tắc mapping
+    mapping_rules = {}
+    if 'resnet' in model_type.lower():
+        mapping_rules = {
+            'backbone.0.': 'conv1.', 'backbone.1.': 'bn1.',
+            'backbone.4.': 'layer1.', 'backbone.5.': 'layer2.',
+            'backbone.6.': 'layer3.', 'backbone.7.': 'layer4.'
+        }
+    elif 'densenet' in model_type.lower():
+        mapping_rules = {
+            'backbone.0.': 'features.', 
+        }
+
+    # 3. Đổi tên keys
+    new_state_dict = {}
+    for k, v in state_dict.items():
+        if k.startswith('module.'): k = k[7:] 
+        
+        new_key = k
+        for old, new in mapping_rules.items():
+            if k.startswith(old):
+                new_key = k.replace(old, new)
+                break
+        new_state_dict[new_key] = v
+
+    # 4. Load vào model
+    model_state = model.state_dict()
+    # Chỉ lấy key khớp cả tên và size
+    matched_state = {k: v for k, v in new_state_dict.items() 
+                     if k in model_state and v.size() == model_state[k].size()}
+    
+    logging.info(f"Matched {len(matched_state)}/{len(model_state)} layers.")
+    
+    if len(matched_state) == 0:
+        logging.error(f"CRITICAL: 0 layers matched for {model_type}! Check mapping logic.")
+    
+    model.load_state_dict(matched_state, strict=False)
+    return model
