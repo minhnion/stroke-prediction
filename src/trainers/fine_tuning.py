@@ -44,6 +44,8 @@ def apply_finetuning_strategy(model, config):
             target_modules=lora_params.get('target_modules', ["qkv"]), # Layer names to apply LoRA
             lora_dropout=lora_params.get('dropout', 0.1),
             bias="none",
+
+            modules_to_save=lora_params.get('modules_to_save', []),
         )
         
         model = get_peft_model(model, peft_config)

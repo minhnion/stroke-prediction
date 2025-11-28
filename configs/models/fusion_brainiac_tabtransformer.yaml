@@ -1,0 +1,38 @@
+model_name: "FusionModel"
+
+image_encoder:
+  name: "brainiac_3d_to_2d" # Gọi nhánh mới
+  params:
+    # Chúng ta dùng khung sườn ViT Base, nhưng weight lấy từ BrainIAC
+    model_name: "vit_base_patch16_224" 
+    pretrained: false
+    pretrained_checkpoint_path: "model_weights/BrainIAC.ckpt" # Đường dẫn file bạn đã tải
+    
+    # Khuyến nghị dùng LoRA để thích nghi nhẹ nhàng
+    fine_tuning:
+      method: "lora"
+      params:
+        r: 16
+        alpha: 16
+        dropout: 0.3
+        target_modules: ["qkv"], 
+        modules_to_save: ["patch_embed.proj", "norm", "pos_embed"] 
+
+tabular_encoder:
+  name: "tab_transformer"
+  params:
+    dim: 32
+    depth: 4
+    heads: 4
+    
+fusion:
+  type: "concat_transformer"
+  params:
+    projection_dim: 512
+    fusion_depth: 2
+    
+mlp_head:
+  params:
+    hidden_dims: [128, 64]
+    output_dim: 1
+    dropout: 0.5

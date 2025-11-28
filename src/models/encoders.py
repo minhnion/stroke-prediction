@@ -5,6 +5,7 @@ import logging
 from src.models.tabtransformer_encoder import TabTransformerEncoder
 from src.models.biomed_clip_image_encoder import BiomedCLIPImageEncoder
 from src.trainers.fine_tuning import apply_finetuning_strategy
+from src.models.brain_iac_encoder import load_brainiac_3d_to_2d
 
 def create_image_encoder(name, params):
     
@@ -59,7 +60,19 @@ def create_image_encoder(name, params):
         model = BiomedCLIPImageEncoder(model_name=hf_model_name)
         embedding_dim = model.embed_dim
         logging.info(f"Successfully loaded BiomedCLIP. Embedding dim: {embedding_dim}")
-    
+
+    elif name == "brainiac_3d_to_2d":
+        # Chúng ta dùng kiến trúc ViT Base chuẩn của timm làm khung sườn
+        # Vì BrainIAC dựa trên ViT Base (embed_dim=768)
+        logging.info("Creating base ViT model to load BrainIAC weights...")
+        model = timm.create_model("vit_base_patch16_224", pretrained=False, num_classes=0)
+        embedding_dim = model.embed_dim
+        
+        if params.get('pretrained_checkpoint_path'):
+            model = load_brainiac_3d_to_2d(model, params['pretrained_checkpoint_path'])
+        else:
+            raise ValueError("BrainIAC requires 'pretrained_checkpoint_path' to be set.")
+        
     else:
         raise ValueError(f"Unknown image encoder name: {name}")
     
