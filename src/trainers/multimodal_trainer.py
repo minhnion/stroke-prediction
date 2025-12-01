@@ -6,7 +6,7 @@ import logging
 from src.trainers.callbacks import EarlyStopping
 
 class MultiModalTrainer:
-    def __init__(self, model, optimizer, criterion, device, train_loader, val_loader, metrics, epochs, early_stopping):
+    def __init__(self, model, optimizer, criterion, device, train_loader, val_loader, metrics, epochs, early_stopping, scheduler=None):
         self.model = model
         self.optimizer = optimizer
         self.criterion = criterion
@@ -17,6 +17,7 @@ class MultiModalTrainer:
         self.epochs = epochs
         self.early_stopping = early_stopping
         self.history = []
+        self.scheduler = scheduler
 
     def _train_one_epoch(self):
         self.model.train()
@@ -66,6 +67,14 @@ class MultiModalTrainer:
             train_loss = self._train_one_epoch()
             val_loss, val_metrics = self._validate_one_epoch()
             
+            if self.scheduler is not None:
+                if isinstance(self.scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                    self.scheduler.step(val_loss)
+                else:
+                    self.scheduler.step()
+                current_lr = self.optimizer.param_groups[0]['lr']
+                logging.info(f"Epoch {epoch} | LR: {current_lr:.6f}")
+                
             logging.info(f"Epoch {epoch}/{self.epochs} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
             
             epoch_log = {'epoch': epoch, 'train_loss': train_loss, 'val_loss': val_loss}

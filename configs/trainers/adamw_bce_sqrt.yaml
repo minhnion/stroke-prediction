@@ -13,10 +13,24 @@ loss_function:
     pos_weight_mode: "sqrt"
         
 training_params:
-  epochs: 30
+  epochs: 50
   # device: "cuda"
   device: "cpu"
       
 early_stopping:
-  patience: 15
+  patience: 7
   monitor_metric: "val_loss" 
+
+scheduler:
+  name: "ReduceLROnPlateau" 
+  params:
+    factor: 0.1
+    patience: 5
+    eta_min: 1e-6
+
+# scheduler:
+#   name: "CosineAnnealingWarmRestarts"
+#   params:
+#     T_0: 10      # Chu kỳ đầu tiên là 10 epoch
+#     T_mult: 2    # Chu kỳ sau dài gấp đôi (20, 40...)
+#     eta_min: 1e-6 # LR thấp nhất

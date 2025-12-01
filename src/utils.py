@@ -129,10 +129,11 @@ def tqdm_joblib(tqdm_object):
 
 
 def load_weights(model, checkpoint_path, model_type):
+
     logging.info(f"Smart loading weights for {model_type} from: {checkpoint_path}")
-    if not checkpoint_path or checkpoint_path == "None":
-        logging.warning("No checkpoint path provided. Skipping load.")
-        return model
+    
+    if not os.path.exists(checkpoint_path):
+        raise FileNotFoundError(f"Checkpoint not found at {checkpoint_path}")
 
     try:
         checkpoint = torch.load(checkpoint_path, map_location='cpu')
@@ -140,7 +141,6 @@ def load_weights(model, checkpoint_path, model_type):
         logging.error(f"Failed to load checkpoint file: {e}")
         raise e
     
-    # 1. Unwrap dictionary
     if isinstance(checkpoint, dict):
         if 'state_dict' in checkpoint: state_dict = checkpoint['state_dict']
         elif 'model' in checkpoint: state_dict = checkpoint['model']
@@ -148,20 +148,32 @@ def load_weights(model, checkpoint_path, model_type):
     else:
         state_dict = checkpoint
 
-    # 2. Chuẩn bị quy tắc mapping
     mapping_rules = {}
+    
+    # --- ResNet50 ---
     if 'resnet' in model_type.lower():
         mapping_rules = {
-            'backbone.0.': 'conv1.', 'backbone.1.': 'bn1.',
-            'backbone.4.': 'layer1.', 'backbone.5.': 'layer2.',
-            'backbone.6.': 'layer3.', 'backbone.7.': 'layer4.'
+            'backbone.0.': 'conv1.', 
+            'backbone.1.': 'bn1.',
+            # backbone.2 (relu) và 3 (maxpool) không có tham số
+            'backbone.4.': 'layer1.', 
+            'backbone.5.': 'layer2.',
+            'backbone.6.': 'layer3.', 
+            'backbone.7.': 'layer4.'
         }
+        
+    # --- DenseNet121 ---
     elif 'densenet' in model_type.lower():
         mapping_rules = {
             'backbone.0.': 'features.', 
         }
+        
+    # --- InceptionV3  ---
+    elif 'inception' in model_type.lower():
+        mapping_rules = {
+            'backbone.0.': '', 
+        }
 
-    # 3. Đổi tên keys
     new_state_dict = {}
     for k, v in state_dict.items():
         if k.startswith('module.'): k = k[7:] 
@@ -171,18 +183,26 @@ def load_weights(model, checkpoint_path, model_type):
             if k.startswith(old):
                 new_key = k.replace(old, new)
                 break
+        
+        if 'fc.' in new_key or 'classifier.' in new_key or 'classif.' in new_key:
+            continue
+            
         new_state_dict[new_key] = v
 
-    # 4. Load vào model
-    model_state = model.state_dict()
-    # Chỉ lấy key khớp cả tên và size
-    matched_state = {k: v for k, v in new_state_dict.items() 
-                     if k in model_state and v.size() == model_state[k].size()}
+    msg = model.load_state_dict(new_state_dict, strict=False)
     
-    logging.info(f"Matched {len(matched_state)}/{len(model_state)} layers.")
+    missing_keys = msg.missing_keys
+    real_missing = [k for k in missing_keys if not any(x in k for x in ['fc', 'classifier', 'head'])]
     
-    if len(matched_state) == 0:
-        logging.error(f"CRITICAL: 0 layers matched for {model_type}! Check mapping logic.")
+    total_params = len(list(model.parameters()))
+    loaded_params = len(new_state_dict)
     
-    model.load_state_dict(matched_state, strict=False)
+    logging.info(f"Checkpoint keys processed: {loaded_params}")
+    
+    if len(real_missing) > 20: 
+        logging.warning(f"⚠️ HIGH RISK: {len(real_missing)} layers were NOT loaded! Model might be random.")
+        logging.warning(f"Sample missing keys: {real_missing[:5]}")
+    else:
+        logging.info(f"✅ SUCCESS: Weights loaded correctly. (Ignored head layers: {len(missing_keys) - len(real_missing)})")
+    
     return model

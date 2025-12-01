@@ -1,0 +1,13 @@
+model_name: "ImageClassifier"
+
+image_encoder:
+  name: "timm_cnn" 
+  params:
+    model_name: "resnet50"
+    pretrained: true 
+    
+mlp_head:
+  params: 
+    output_dim: 1
+    hidden_dims: [512]
+    dropout: 0.5

@@ -20,3 +20,4 @@ gdown
 transformers
 open_clip_torch
 peft
+huggingface_hub

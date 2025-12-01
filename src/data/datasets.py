@@ -71,12 +71,31 @@ class MultiModalStrokeDataset(Dataset):
             'label': label
         }
 
-def get_transforms(image_size, mean, std):
-    return A.Compose([
-        A.Resize(image_size, image_size),
-        A.Normalize(mean=mean, std=std),
-        ToTensorV2(),
-    ])
+def get_transforms(image_size, mean, std, augment=True):
+    if augment:
+        return A.Compose([
+            A.Resize(image_size, image_size),
+            
+            A.HorizontalFlip(p=0.5),
+            A.Rotate(limit=15, p=0.5),
+            A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=0.5),
+            A.GaussNoise(var_limit=(10.0, 50.0), p=0.3), 
+            A.CoarseDropout(
+                num_holes_range=(4, 8), 
+                hole_height_range=(8, int(image_size/10)), 
+                hole_width_range=(8, int(image_size/10)), 
+                p=0.3
+            ), 
+            
+            A.Normalize(mean=mean, std=std),
+            ToTensorV2(),
+        ])
+    else:
+        return A.Compose([
+            A.Resize(image_size, image_size),
+            A.Normalize(mean=mean, std=std),
+            ToTensorV2(),
+        ])
 
 class ImageFolderWrapper(ImageFolder):
 

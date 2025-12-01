@@ -36,3 +36,5 @@ Thumbs.db
 *.swp
 
 model_weights/
+
+tests/

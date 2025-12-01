@@ -4,14 +4,8 @@ image_encoder:
   name: "timm_cnn" 
   params:
     model_name: "densenet121"
-    # pretrained: true 
-    pretrained_checkpoint_path: "model_weights/DenseNet121.pt"
+    pretrained: true 
     
-    # fine_tuning:
-    #   method: "freeze"
-    #   params:
-    #     unfreeze_last_blocks: 0 
-
 mlp_head:
   params: 
     output_dim: 1

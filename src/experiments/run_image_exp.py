@@ -47,7 +47,20 @@ def run_image_experiment(model_config_path, data_config_path, trainer_config_pat
     logging.info(f"Trainer Config: {trainer_config_path}")
 
     logging.info("Preparing image-only data from processed folder...")
-    img_transforms = get_transforms(data_config['image_size'], data_config['image_mean'], data_config['image_std'])
+
+    train_transforms = get_transforms(
+        image_size=data_config['image_size'],
+        mean=data_config['image_mean'],
+        std=data_config['image_std'],
+        augment=True
+    )
+
+    val_transforms = get_transforms(
+        image_size=data_config['image_size'],
+        mean=data_config['image_mean'],
+        std=data_config['image_std'],
+        augment=False
+    )
     
     processed_image_dir = data_config['image_root_dir_processed']
     train_dir = os.path.join(processed_image_dir, 'train')
@@ -56,8 +69,8 @@ def run_image_experiment(model_config_path, data_config_path, trainer_config_pat
     if not os.path.isdir(train_dir) or not os.path.isdir(val_dir):
         raise FileNotFoundError(f"Processed data not found. Please run the image preprocessing script for '{data_config['dataset_name']}' first.")
 
-    train_dataset = ImageFolderWrapper(root=train_dir, transform=img_transforms)
-    val_dataset = ImageFolderWrapper(root=val_dir, transform=img_transforms)
+    train_dataset = ImageFolderWrapper(root=train_dir, transform=train_transforms)
+    val_dataset = ImageFolderWrapper(root=val_dir, transform=val_transforms)
     
     logging.info(f"Found {len(train_dataset)} training images and {len(val_dataset)} validation images.")
     logging.info(f"Classes found: {train_dataset.classes} with mapping {train_dataset.class_to_idx}")
@@ -79,6 +92,36 @@ def run_image_experiment(model_config_path, data_config_path, trainer_config_pat
     logging.info("Setting up training components...")
     optimizer = torch.optim.AdamW(model.parameters(), **trainer_config['optimizer']['params'])
     
+    scheduler = None
+    if 'scheduler' in trainer_config:
+        sched_cfg = trainer_config['scheduler']
+        
+        params = sched_cfg.get('params', {})
+        
+        if sched_cfg['name'] == 'CosineAnnealingLR':
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                optimizer, 
+                T_max=trainer_config['training_params']['epochs'], 
+                eta_min=float(params.get('eta_min', 1e-6)) 
+            )
+        elif sched_cfg['name'] == 'ReduceLROnPlateau':
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optimizer,
+                mode='min',
+                factor=float(params.get('factor', 0.1)), 
+                patience=int(params.get('patience', 5)), 
+                min_lr=float(params.get('min_lr', 1e-6)) 
+            )
+        elif sched_cfg['name'] == 'CosineAnnealingWarmRestarts':
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+                optimizer,
+                T_0=int(params.get('T_0', 10)),          
+                T_mult=int(params.get('T_mult', 1)),      
+                eta_min=float(params.get('eta_min', 1e-6)) 
+            )
+        logging.info(f"Using Scheduler: {sched_cfg['name']}")
+
+
     loss_cfg = trainer_config['loss_function']
 
     if loss_cfg['name'] == 'BCEWithLogitsLoss':
@@ -124,7 +167,7 @@ def run_image_experiment(model_config_path, data_config_path, trainer_config_pat
         trace_func=logging.info
     )
 
-    trainer = MultiModalTrainer(model, optimizer, criterion, device, train_loader, val_loader, metrics, trainer_config['training_params']['epochs'], early_stopping)
+    trainer = MultiModalTrainer(model, optimizer, criterion, device, train_loader, val_loader, metrics, trainer_config['training_params']['epochs'], early_stopping, scheduler=scheduler)
     
     history = trainer.train()
 

@@ -41,23 +41,39 @@ def evaluate_image_on_test(model_config_path, data_config_path, trainer_config_p
         logging.error(f"Test data not found at {test_dir}. Please run the image preprocessing script first.")
         return
 
-    img_transforms = get_transforms(data_config['image_size'], data_config['image_mean'], data_config['image_std'])
-    
+    img_transforms = get_transforms(
+        data_config['image_size'], 
+        data_config['image_mean'], 
+        data_config['image_std'], 
+        augment=False 
+    )
+
     test_dataset = ImageFolderWrapper(root=test_dir, transform=img_transforms)
     test_loader = DataLoader(test_dataset, batch_size=data_config['batch_size'] * 2, shuffle=False, num_workers=data_config['num_workers'])
     logging.info(f"Test data loaded. Number of samples: {len(test_dataset)}")
 
-    device = torch.device("cpu")
+    device = torch.device(trainer_config['training_params']['device'] if torch.cuda.is_available() else "cpu")
     logging.info(f"Loading best model from checkpoint...")
     
     image_encoder, img_dim = create_image_encoder(**model_config['image_encoder'])
+
+    mlp_cfg = model_config['mlp_head']
+    if 'params' in mlp_cfg:
+        mlp_params = mlp_cfg['params']
+    else:
+        mlp_params = mlp_cfg
+
     model = ImageClassifier(
         image_encoder=image_encoder,
         image_embedding_dim=img_dim,
-        mlp_params=model_config['mlp_head']['params']
+        mlp_params=mlp_params
     )
     
     checkpoint_path = os.path.join(results_dir, 'checkpoints', 'best_model.pth')
+    if not os.path.exists(checkpoint_path):
+        logging.error(f"Checkpoint not found at {checkpoint_path}")
+        return
+    
     model.load_state_dict(torch.load(checkpoint_path, map_location=device))
     model.to(device)
     model.eval()

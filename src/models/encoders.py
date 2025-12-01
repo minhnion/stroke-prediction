@@ -6,6 +6,7 @@ from src.models.tabtransformer_encoder import TabTransformerEncoder
 from src.models.biomed_clip_image_encoder import BiomedCLIPImageEncoder
 from src.trainers.fine_tuning import apply_finetuning_strategy
 from src.utils import load_weights
+from src.models.radimagenet_encoder import RadImageNetEncoder
 
 def create_image_encoder(name, params):
     
@@ -26,45 +27,50 @@ def create_image_encoder(name, params):
             print(f"Loading custom image checkpoint from: {params['pretrained_checkpoint_path']}")
             model.load_state_dict(torch.load(params['pretrained_checkpoint_path']))
 
-    elif name == "timm_cnn":
+    if name == "timm_cnn":
         model_name = params['model_name']
-        logging.info(f"Creating CNN model: {model_name}")
+
+        is_pretrained = params.get('pretrained', False) 
+        checkpoint_path = params.get('pretrained_checkpoint_path')
+
+        logging.info(f"Creating CNN model: {model_name} (ImageNet Pretrained: {is_pretrained})")
         
-        # Tạo kiến trúc rỗng
-        model = timm.create_model(model_name, pretrained=False, num_classes=0)
+        model = timm.create_model(model_name, pretrained=is_pretrained, num_classes=0)
         embedding_dim = model.num_features
         
-        # Load weights
-        checkpoint_path = params.get('pretrained_checkpoint_path')
+
         if checkpoint_path:
+            logging.info(f"Overriding weights with custom checkpoint: {checkpoint_path}")
             model = load_weights(model, checkpoint_path, model_name)
-        else:
-            logging.warning("Running with RANDOM INITIALIZATION (No checkpoint provided)")
+        return model, embedding_dim
+
+    elif name == "timm_cnn":
+        logging.info(f"Creating Generic TIMM CNN: {params['model_name']} (Pretrained ImageNet: {params['pretrained']})")
+        model = timm.create_model(
+            params['model_name'],
+            pretrained=params['pretrained'],
+            num_classes=0 
+        )
+        embedding_dim = model.num_features
 
     elif name == "radimagenet_hub":
         repo = 'Warvito/radimagenet-models'
         model_name = params.get('model_name', 'radimagenet_resnet50')
-        logging.info(f"Downloading/Loading {model_name} from torch.hub ({repo})...")
-        model = torch.hub.load(repo, model_name, verbose=True, trust_repo=True)
-
-        if "resnet50" in model_name:
-            embedding_dim = 2048
-        elif "resnet18" in model_name:
-            embedding_dim = 512
-        elif "dense" in model_name:
-            embedding_dim = 1024
-        elif "inception" in model_name:
-            embedding_dim = 2048
-        else:
-            embedding_dim = 2048  # default fallback
-
-        model = nn.Sequential(
-            model,                        # Backbone
-            nn.AdaptiveAvgPool2d((1, 1)), # Current: [Batch, 2048, 7, 7].  -> [Batch, 2048, 1, 1]
-            nn.Flatten()                  # Flatten vector -> [Batch, 2048]
-        )
         
-        logging.info(f"RadImageNet model loaded as Backbone + Pooling. Output dim: {embedding_dim}")        
+        logging.info(f"Loading {model_name} directly from torch.hub ({repo})...")
+        
+        try:
+            # Tải backbone từ Hub
+            raw_model = torch.hub.load(repo, model_name, verbose=True)
+        except Exception as e:
+            raise RuntimeError(f"Failed to load from torch.hub: {e}")
+
+        # Bọc backbone vào trong Wrapper của chúng ta để xử lý output
+        model = RadImageNetEncoder(raw_model, model_name)
+        
+        logging.info(f"Successfully loaded {model_name}. Added AvgPool + Flatten. Embedding dim: {model.embed_dim}")
+        
+        return model, model.embed_dim
     
     elif name == "biomedclip_hf":
         hf_model_name = params.get('model_name', "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224")
@@ -100,9 +106,6 @@ def create_tabular_encoder(name, params, data_config):
         embedding_dim = params['dim'] + len(num_cols)
         
         return model, embedding_dim
-        
-    # elif name == "ft_transformer":
-    #     ...
         
     else:
         raise ValueError(f"Unknown tabular encoder name: {name}")
