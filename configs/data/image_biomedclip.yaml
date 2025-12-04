@@ -1,0 +1,16 @@
+dataset_name: "image_biomedclip"
+dataset_class: "ImageFolder"
+
+image_root_dir_raw: "data/raw/multi_data_stroke/images"
+image_root_dir_processed: "data/processed/image_only_stroke" # Dùng lại dữ liệu đã chia, chỉ khác cách transform on-the-fly
+
+val_size: 0.1
+test_size: 0.2
+seed: 42
+
+image_size: 224
+image_mean: [0.48145466, 0.4578275, 0.40821073]
+image_std: [0.26862954, 0.26130258, 0.27577711]
+
+batch_size: 32
+num_workers: 4

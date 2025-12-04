@@ -19,18 +19,18 @@ def apply_finetuning_strategy(model, config):
         for param in model.parameters():
             param.requires_grad = False
             
-        # Unfreeze last N blocks/layers
-        unfreeze_last_blocks = config.get('params', {}).get('unfreeze_last_blocks', 0)
+        # Unfreeze last N blocks/layers -> not sure, depend on each model
+        # unfreeze_last_blocks = config.get('params', {}).get('unfreeze_last_blocks', 0)
         
-        if unfreeze_last_blocks > 0:
-            logging.info(f"Unfreezing the last {unfreeze_last_blocks} blocks/layers...")
+        # if unfreeze_last_blocks > 0:
+        #     logging.info(f"Unfreezing the last {unfreeze_last_blocks} blocks/layers...")
 
-            total_layers = len(list(model.named_children()))
-            layers_to_train = list(model.children())[-unfreeze_last_blocks:]
+        #     total_layers = len(list(model.named_children()))
+        #     layers_to_train = list(model.children())[-unfreeze_last_blocks:]
             
-            for layer in layers_to_train:
-                for param in layer.parameters():
-                    param.requires_grad = True
+        #     for layer in layers_to_train:
+        #         for param in layer.parameters():
+        #             param.requires_grad = True
         
         return model
 
@@ -39,7 +39,7 @@ def apply_finetuning_strategy(model, config):
         lora_params = config.get('params', {})
         
         peft_config = LoraConfig(
-            r=lora_params.get('r', 16),           # Rank
+            r=lora_params.get('r', 16),          
             lora_alpha=lora_params.get('alpha', 16),
             target_modules=lora_params.get('target_modules', ["qkv"]), # Layer names to apply LoRA
             lora_dropout=lora_params.get('dropout', 0.1),

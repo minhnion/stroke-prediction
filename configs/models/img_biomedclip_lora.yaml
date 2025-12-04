@@ -1,0 +1,20 @@
+model_name: "ImageClassifier"
+
+image_encoder:
+  name: "biomedclip_hf"
+  params:
+    model_name: "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
+    
+    fine_tuning:
+      method: "lora"
+      params:
+        r: 16             
+        alpha: 32        
+        dropout: 0.1     
+        
+        target_modules: ["qkv", "proj", "fc1", "fc2"]
+
+mlp_head:
+  params: 
+    output_dim: 1
+    dropout: 0.2

@@ -1,0 +1,18 @@
+model_name: "ImageClassifier"
+
+image_encoder:
+  name: "biomedclip_hf" 
+  params:
+    model_name: "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
+    
+    # Tùy chọn: Thử nghiệm các kỹ thuật Fine-tuning nếu cần
+    # fine_tuning:
+    #   method: "lora" 
+    #   params:
+    #     r: 16
+    #     target_modules: ["q_proj", "v_proj"]
+
+mlp_head:
+  params: 
+    output_dim: 1
+    dropout: 0.2

@@ -13,16 +13,8 @@ class BiomedCLIPImageEncoder(nn.Module):
         # Embed_dim từ ViT config
         self.embed_dim = self.trunk.embed_dim  
         
-    # def forward(self, x):
-    #     return self.trunk(x)
-    
-    # def forward_features(self, x):
-    #     return self.trunk(x)
 
-    def forward(self, x): # Đổi tên từ forward_features thành forward
-        # Hugging Face CLIPVisionModel nhận đầu vào là 'pixel_values'
-        outputs = self.model(pixel_values=x)
+    def forward(self, x): 
         
-        # outputs.pooler_output chứa vector đại diện cho ảnh (CLS token đã qua pooler)
-        # Kích thước: (Batch, Hidden_Size) -> Đúng ý chúng ta muốn
-        return outputs.pooler_output
+        features = self.trunk(x)
+        return features
