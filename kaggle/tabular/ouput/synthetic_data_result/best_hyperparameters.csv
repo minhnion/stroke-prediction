@@ -1,0 +1,7 @@
+Model,Frequency,Percentage,classifier__learning_rate,classifier__max_depth,classifier__n_estimators,classifier__num_leaves,depth,iterations,learning_rate,classifier__min_samples_split,classifier__C,classifier__solver,classifier__gamma,classifier__kernel
+XGBoost,21/30,70.0%,0.1,3.0,100.0,,,,,,,,,
+LightGBM,29/30,96.7%,0.1,,100.0,20.0,,,,,,,,
+CatBoost,17/30,56.7%,,,,,4.0,200.0,0.05,,,,,
+RandomForest,21/30,70.0%,,10.0,100.0,,,,,5.0,,,,
+LogisticRegression,13/30,43.3%,,,,,,,,,1.0,liblinear,,
+SVM,11/30,36.7%,,,,,,,,,1.0,,auto,rbf
